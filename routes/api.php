@@ -22,3 +22,12 @@ Route::prefix('cart')->group(function () {
     Route::delete('/items/{lineId}', [\App\Http\Controllers\Api\CartController::class, 'removeItem']); // Remove item
     Route::delete('/', [\App\Http\Controllers\Api\CartController::class, 'clear']); // Clear cart
 });
+
+// Checkout API routes
+Route::prefix('checkout')->group(function () {
+    Route::post('/shipping-address', [\App\Http\Controllers\Api\CheckoutController::class, 'setShippingAddress']); // Set shipping address
+    Route::post('/billing-address', [\App\Http\Controllers\Api\CheckoutController::class, 'setBillingAddress']); // Set billing address
+    Route::get('/summary', [\App\Http\Controllers\Api\CheckoutController::class, 'summary']); // Get checkout summary
+    Route::post('/complete', [\App\Http\Controllers\Api\CheckoutController::class, 'complete']); // Complete checkout and create order
+    Route::get('/order/{reference}', [\App\Http\Controllers\Api\CheckoutController::class, 'getOrder']); // Get order by reference
+});
