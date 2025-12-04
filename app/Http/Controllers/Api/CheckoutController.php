@@ -253,6 +253,7 @@ class CheckoutController extends Controller
 
             $driver = \Lunar\Facades\Payments::driver($validated['payment_method']);
             $driver->cart($cart);
+
             $order = $driver->authorize();
 
             // \Lunar\Models\Order::where('id', $order->orderId)

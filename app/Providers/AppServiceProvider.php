@@ -4,6 +4,12 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Lunar\Admin\Support\Facades\LunarPanel;
+
+use Lunar\Facades\Payments;
+use App\PaymentTypes\CODPayment;
+use Lunar\Models\Order;
+use App\Observers\OrderObserver;
+
 class AppServiceProvider extends ServiceProvider
 {
     /**
@@ -32,6 +38,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        Payments::extend('cash-on-delivery', function ($app) {
+            return $app->make(CODPayment::class);
+        });
+
+        // Register Order observer for COD payment status updates
+        Order::observe(OrderObserver::class);
     }
 }

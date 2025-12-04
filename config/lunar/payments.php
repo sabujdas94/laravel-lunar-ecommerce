@@ -10,8 +10,8 @@ return [
             'authorized' => 'payment-offline',
         ],
         'cash-on-delivery' => [
-            'driver' => 'offline',
-            'authorized' => 'cash-on-delivery',
+            'driver' => 'cash-on-delivery',
+            'authorized' => 'waiting-confirmation',
         ],
     ],
 

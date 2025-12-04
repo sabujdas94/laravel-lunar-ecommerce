@@ -70,8 +70,8 @@ return [
             'favourite' => true,
         ],
 
-        'cash-on-delivery' => [
-            'label' => 'Cash on Delivery',
+        'waiting-confirmation' => [
+            'label' => 'Waiting Confirmation',
             'color' => '#0A81D7',
             'mailers' => [],
             'notifications' => [],
