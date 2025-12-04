@@ -11,7 +11,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        LunarPanel::register();
+        LunarPanel::panel(fn($panel) => $panel->path('admin'))
+            ->register();
+            
         \Lunar\Facades\Telemetry::optOut();
 
         // Register custom Cart model

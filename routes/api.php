@@ -4,6 +4,16 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomePageController;
 
+// Authentication routes (public)
+Route::post('/register', [\App\Http\Controllers\Api\AuthController::class, 'register']);
+Route::post('/login', [\App\Http\Controllers\Api\AuthController::class, 'login']);
+
+// Protected authentication routes
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/logout', [\App\Http\Controllers\Api\AuthController::class, 'logout']);
+    Route::get('/me', [\App\Http\Controllers\Api\AuthController::class, 'me']);
+});
+
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');

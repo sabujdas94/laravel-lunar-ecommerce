@@ -309,9 +309,16 @@ class CheckoutController extends Controller
                 'message' => 'Cart validation failed.',
                 'errors' => $e->errors(),
             ], 422);
-        } catch (\Exception $e) {
+        } 
+        catch (\Lunar\Exceptions\Carts\CartException $e) {
             DB::rollBack();
-
+            return response()->json([
+                'message' => $e->getMessage(),
+                'errors' => $e->errors(),
+            ], 422);
+        } 
+        catch (\Exception $e) {
+            DB::rollBack();            
             return response()->json([
                 'message' => 'Failed to create order.',
                 'error' => $e->getMessage(),
