@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use App\Models\Cart;
+use Illuminate\Support\Facades\Auth;
 use Lunar\Models\CartAddress;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -220,6 +221,9 @@ class CheckoutController extends Controller
             return response()->json(['message' => 'Cart not found.'], 404);
         }
 
+        $this->authenticateCart($cart);
+        
+
         // Validate cart has items
         if ($cart->lines()->count() === 0) {
             return response()->json([
@@ -231,62 +235,17 @@ class CheckoutController extends Controller
             DB::beginTransaction();
 
             // Create or update customer
-            $customer = null;
-            if ($request->user()) {
-                // If user is authenticated, find or create customer
-                $customer = \Lunar\Models\Customer::whereHas('users', function($query) use ($request) {
-                    $query->where('users.id', $request->user()->id);
-                })->first();
-
-                if (!$customer) {
-                    $customer = \Lunar\Models\Customer::create([
-                        'first_name' => $validated['first_name'],
-                        'last_name' => $validated['last_name'] ?? '',
-                        'meta' => [
-                            'contact_email' => $validated['contact_email'] ?? null,
-                            'contact_phone' => $validated['contact_phone'] ?? null,
-                        ],
-                    ]);
-                    $customer->users()->attach($request->user()->id);
-                } else {
-                    // Update existing customer
-                    $customer->update([
-                        'first_name' => $validated['first_name'],
-                        'last_name' => $validated['last_name'] ?? '',
-                        'meta' => array_merge(
-                            $customer->meta ? (array)$customer->meta : [],
-                            [
-                                'contact_email' => $validated['contact_email'] ?? null,
-                                'contact_phone' => $validated['contact_phone'] ?? null,
-                            ]
-                        ),
-                    ]);
-                }
-            } else {
-                // Guest checkout - create customer without user association
-                $customer = \Lunar\Models\Customer::create([
-                    'first_name' => $validated['first_name'],
-                    'last_name' => $validated['last_name'] ?? null,
-                    'meta' => [
-                        'contact_email' => $validated['contact_email'] ?? null,
-                        'contact_phone' => $validated['contact_phone'] ?? null,
-                    ],
-                ]);
-            }
+            $customer = $this->createOrUpdateCustomer($request, $validated);
 
             // Associate customer with cart
             $cart->customer()->associate($customer);
+            $cart->setCustomer($customer);
 
             // Set address on cart (both shipping and billing use same address)
-            $addressData = $validated['address'];
-            $addressData['cart_id'] = $cart->id;
-            $addressData['first_name'] = $validated['first_name'];
-            $addressData['last_name'] = $validated['last_name'] ?? '';
-            $addressData['contact_email'] = $validated['contact_email'] ?? null;
-            $addressData['contact_phone'] = $validated['contact_phone'] ?? null;
-
-            $cart->setShippingAddress($addressData);
-            $cart->setBillingAddress($addressData);
+            $address = $this->createNewAddress($validated, $customer->id);
+            
+            $cart->setShippingAddress($address);
+            $cart->setBillingAddress($address);
 
             $shippingOptions = \Lunar\Facades\ShippingManifest::getOptions($cart);
 
@@ -295,6 +254,9 @@ class CheckoutController extends Controller
             $driver = \Lunar\Facades\Payments::driver($validated['payment_method']);
             $driver->cart($cart);
             $order = $driver->authorize();
+
+            // \Lunar\Models\Order::where('id', $order->orderId)
+                
 
             DB::commit();
 
@@ -318,7 +280,7 @@ class CheckoutController extends Controller
             ], 422);
         } 
         catch (\Exception $e) {
-            DB::rollBack();            
+            DB::rollBack();    
             return response()->json([
                 'message' => 'Failed to create order.',
                 'error' => $e->getMessage(),
@@ -411,5 +373,94 @@ class CheckoutController extends Controller
             'contact_phone' => $address->contact_phone,
             'delivery_instructions' => $address->delivery_instructions ?? null,
         ];
+    }
+
+    /**
+     * Create or update customer based on authentication status.
+     */
+    private function createOrUpdateCustomer(Request $request, array $validated): \Lunar\Models\Customer
+    {
+        $customer = null;
+        $user = Auth::guard('sanctum')->user();
+        
+        if ($user) {
+            // If user is authenticated, find or create customer
+            $customer = \Lunar\Models\Customer::whereHas('users', function($query) use ($user) {
+                $query->where('users.id', $user->id);
+            })->first();
+
+            if (!$customer) {
+                $customer = $this->createNewCustomer($validated);
+                $customer->users()->attach($user->id);
+            } else {
+                // Update existing customer
+                $this->updateExistingCustomer($customer, $validated);
+            }
+        } else {
+            // Guest checkout - create customer without user association
+            $customer = $this->createNewCustomer($validated);
+        }
+
+        return $customer;
+    }
+
+    /**
+     * Create a new customer for guest checkout.
+     */
+    private function createNewCustomer(array $validated)
+    {
+        return \Lunar\Models\Customer::create([
+            'first_name' => $validated['first_name'],
+            'last_name' => $validated['last_name'] ?? '',
+            'account_ref' => $validated['contact_phone'] ?? null,
+            'meta' => [
+                'contact_email' => $validated['contact_email'] ?? null,
+                'contact_phone' => $validated['contact_phone'] ?? null,
+            ],
+        ]);
+    }
+
+    private function updateExistingCustomer($customer, array $validated)
+    {
+        // Update existing customer
+        return $customer->update([
+            'first_name' => $validated['first_name'],
+            'last_name' => $validated['last_name'] ?? '',
+            'account_ref' => $validated['contact_phone'] ?? null,
+            'meta' => array_merge(
+                $customer->meta ? (array)$customer->meta : [],
+                [
+                    'contact_email' => $validated['contact_email'] ?? null,
+                    'contact_phone' => $validated['contact_phone'] ?? null,
+                ]
+            ),
+        ]);
+    }
+
+    private function createNewAddress(array $validated, $customer_id)
+    {
+        $addressData = $validated['address'];
+        $addressData['first_name'] = $validated['first_name'];
+        $addressData['last_name'] = $validated['last_name'] ?? '';
+        $addressData['contact_email'] = $validated['contact_email'] ?? null;
+        $addressData['contact_phone'] = $validated['contact_phone'] ?? null;
+        $addressData['customer_id'] = $customer_id;
+
+        return \Lunar\Models\Address::create($addressData);
+    }
+
+    private function authenticateCart(Cart $cart): void
+    {
+        $user = Auth::guard('sanctum')->user();
+        if($user && $cart && !$cart->user_id) {
+            $cart->user_id = $user->id;
+            $cart->save();
+        } else {
+            // verify that this cart belongs to the authenticated user
+            if($user && $cart && $cart->user_id !== $user->id) {
+                abort(403, 'Unauthorized access to cart.');
+            }
+        }
+
     }
 }

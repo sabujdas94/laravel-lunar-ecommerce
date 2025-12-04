@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Str;
 use App\Models\Cart;
+use Illuminate\Support\Facades\Auth;
 use Lunar\Models\CartLine;
 use Lunar\Models\Currency;
 use Lunar\Models\Channel;
@@ -34,10 +35,12 @@ class CartController extends Controller
         $currency = Currency::getDefault();
         $channel = Channel::getDefault();
 
+        $user = Auth::guard('sanctum')->user();
+
         $cart = new Cart([
             'currency_id' => $currency->id,
             'channel_id' => $channel->id,
-            'user_id' => $request->user()?->id,
+            'user_id' => $user ? $user->id : null,
         ]);
         $cart->save();
 
@@ -57,6 +60,8 @@ class CartController extends Controller
         }
 
         $cart = Cart::findByUuid($cartId);
+
+        $this->authenticateCart($cart);
 
         if (!$cart) {
             return response()->json(['message' => 'Cart not found.'], 404);
@@ -82,6 +87,8 @@ class CartController extends Controller
         if (!$cart) {
             return response()->json(['message' => 'Cart not found.'], 404);
         }
+        $this->authenticateCart($cart);
+
         $variant = ProductVariant::find($validated['variant_id']);
 
         if (!$variant) {
@@ -129,6 +136,8 @@ class CartController extends Controller
         if (!$cart) {
             return response()->json(['message' => 'Cart not found.'], 404);
         }
+        $this->authenticateCart($cart);
+
         $line = CartLine::where('cart_id', $cart->id)->where('id', $lineId)->first();
 
         if (!$line) {
@@ -158,6 +167,8 @@ class CartController extends Controller
         if (!$cart) {
             return response()->json(['message' => 'Cart not found.'], 404);
         }
+        $this->authenticateCart($cart);
+
         $line = CartLine::where('cart_id', $cart->id)->where('id', $lineId)->first();
 
         if (!$line) {
@@ -187,6 +198,8 @@ class CartController extends Controller
         if (!$cart) {
             return response()->json(['message' => 'Cart not found.'], 404);
         }
+        $this->authenticateCart($cart);
+        
         $cart->lines()->delete();
 
         $cart->refresh();
@@ -230,5 +243,21 @@ class CartController extends Controller
             'lines' => $lines,
             'lines_count' => $cart->lines->count(),
         ], $status);
+    }
+    
+
+    private function authenticateCart(Cart $cart): void
+    {
+        $user = Auth::guard('sanctum')->user();
+        if($user && $cart && !$cart->user_id) {
+            $cart->user_id = $user->id;
+            $cart->save();
+        } else {
+            // verify that this cart belongs to the authenticated user
+            if($user && $cart && $cart->user_id !== $user->id) {
+                abort(403, 'Unauthorized access to cart.');
+            }
+        }
+
     }
 }

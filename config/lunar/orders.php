@@ -70,8 +70,8 @@ return [
             'favourite' => true,
         ],
 
-        'payment-offline' => [
-            'label' => 'Payment Offline',
+        'cash-on-delivery' => [
+            'label' => 'Cash on Delivery',
             'color' => '#0A81D7',
             'mailers' => [],
             'notifications' => [],

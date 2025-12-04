@@ -11,7 +11,7 @@ return [
         ],
         'cash-on-delivery' => [
             'driver' => 'offline',
-            'authorized' => 'payment-offline',
+            'authorized' => 'cash-on-delivery',
         ],
     ],
 
