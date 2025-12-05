@@ -9,6 +9,8 @@ use Lunar\Facades\Payments;
 use App\PaymentTypes\CODPayment;
 use Lunar\Models\Order;
 use App\Observers\OrderObserver;
+use Lunar\Shipping\ShippingPlugin;
+
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -17,9 +19,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        LunarPanel::panel(fn($panel) => $panel->path('admin'))
-            ->register();
-            
+        LunarPanel::panel(function ($panel) {
+            return $panel->path('admin')
+                ->plugin(new ShippingPlugin());
+        })->register();
+                
         \Lunar\Facades\Telemetry::optOut();
 
         // Register custom Cart model

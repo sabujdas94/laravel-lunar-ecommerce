@@ -194,26 +194,7 @@ class CheckoutController extends Controller
      */
     public function complete(Request $request): JsonResponse
     {
-        $validated = $request->validate([
-            'cart_id' => 'required|string',
-            'payment_method' => 'nullable|string|in:cash-on-delivery',
-            // Customer info
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'nullable|string|max:255',
-            'contact_email' => 'nullable|email|max:255',
-            'contact_phone' => 'nullable|string|max:255',
-            // Address
-            'address' => 'required|array',
-            'address.line_one' => 'required|string|max:255',
-            'address.line_two' => 'nullable|string|max:255',
-            'address.line_three' => 'nullable|string|max:255',
-            'address.city' => 'required|string|max:255',
-            'address.state' => 'nullable|string|max:255',
-            'address.postcode' => 'required|string|max:255',
-            'address.country_id' => 'required|integer|exists:lunar_countries,id',
-            'address.company_name' => 'nullable|string|max:255',
-            'address.delivery_instructions' => 'nullable|string|max:500',
-        ]);
+        $validated = $request->validate($this->getCheckoutValidationRules($request));
 
         $cart = Cart::findByUuid($validated['cart_id']);
 
@@ -242,7 +223,19 @@ class CheckoutController extends Controller
             $cart->setCustomer($customer);
 
             // Set address on cart (both shipping and billing use same address)
-            $address = $this->createNewAddress($validated, $customer->id);
+            $address = null;
+            if(isset($validated['address_id'])) {
+                // Use existing address
+                $address = \Lunar\Models\Address::find($validated['address_id']);
+                if (!$address) {
+                    throw ValidationException::withMessages([
+                        'address_id' => ['The selected address does not exist.'],
+                    ]);
+                }
+            } else {
+                // Create new address
+                $address = $this->createNewAddress($validated, $customer->id);
+            }
             
             $cart->setShippingAddress($address);
             $cart->setBillingAddress($address);
@@ -282,11 +275,43 @@ class CheckoutController extends Controller
         } 
         catch (\Exception $e) {
             DB::rollBack();    
+            throw $e;
             return response()->json([
                 'message' => 'Failed to create order.',
                 'error' => $e->getMessage(),
             ], 500);
         }
+    }
+
+    /**
+     * Get validation rules for checkout completion.
+     */
+    private function getCheckoutValidationRules(Request $request): array
+    {
+        $hasAddressId = $request->has('address_id') && !empty($request->address_id);
+        
+        $rules = [
+            'cart_id' => 'required|string',
+            'payment_method' => 'nullable|string|in:cash-on-delivery',
+            'address_id' => 'nullable|integer|exists:lunar_addresses,id',
+        ];
+
+        // Conditionally add customer info rules
+        if (!$hasAddressId) {
+            $rules['first_name'] = 'required|string|max:255';
+            $rules['contact_email'] = 'nullable|email|max:255';
+            $rules['contact_phone'] = 'nullable|string|max:255';
+            // Address rules - only required when no address_id
+            $rules['address'] = 'required|array';
+            $rules['address.line_one'] = 'required|string|max:255';
+            $rules['address.city'] = 'required|string|max:255';
+            $rules['address.state'] = 'nullable|string|max:255';
+            $rules['address.postcode'] = 'required|string|max:255';
+            $rules['address.country_id'] = 'required|integer|in:19';
+            $rules['address.delivery_instructions'] = 'nullable|string|max:500';
+        }
+
+        return $rules;
     }
 
     /**
@@ -423,6 +448,9 @@ class CheckoutController extends Controller
 
     private function updateExistingCustomer($customer, array $validated)
     {
+        if(isset($validated['address_id']) && $validated['address_id']) {
+            return $customer;
+        }
         // Update existing customer
         return $customer->update([
             'first_name' => $validated['first_name'],
