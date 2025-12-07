@@ -13,6 +13,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [\App\Http\Controllers\Api\AuthController::class, 'logout']);
     Route::get('/me', [\App\Http\Controllers\Api\AuthController::class, 'me']);
     Route::get('/addresses', [\App\Http\Controllers\Api\AddressController::class, 'index']);
+    // My orders
+    Route::get('/my-orders', [\App\Http\Controllers\Api\OrderController::class, 'index']);
+    Route::get('/my-orders/{id}', [\App\Http\Controllers\Api\OrderController::class, 'show']);
 });
 
 Route::get('/user', function (Request $request) {
