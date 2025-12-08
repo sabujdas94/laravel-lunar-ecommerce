@@ -90,10 +90,8 @@ class CmsController extends Controller
             'data' => [
                 'id' => $popup->id,
                 'title' => $popup->title,
-                'description' => $popup->description,
                 'image' => $popup->image ? asset('storage/' . $popup->image) : null,
-                'button_text' => $popup->button_text,
-                'link' => $popup->link,
+                'banner_link' => $popup->banner_link,
             ],
         ]);
     }

@@ -12,10 +12,8 @@ class PromoPopup extends Model
 
     protected $fillable = [
         'title',
-        'description',
         'image',
-        'button_text',
-        'link',
+        'banner_link',
         'start_date',
         'end_date',
         'is_enabled',

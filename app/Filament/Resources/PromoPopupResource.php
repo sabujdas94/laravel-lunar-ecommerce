@@ -33,11 +33,6 @@ class PromoPopupResource extends Resource
                             ->maxLength(191)
                             ->label('Popup Title'),
 
-                        Forms\Components\Textarea::make('description')
-                            ->rows(3)
-                            ->maxLength(500)
-                            ->label('Description'),
-
                         Forms\Components\FileUpload::make('image')
                             ->image()
                             ->directory('promo-popups')
@@ -46,16 +41,11 @@ class PromoPopupResource extends Resource
                             ->label('Banner/Image')
                             ->columnSpanFull(),
 
-                        Forms\Components\TextInput::make('button_text')
-                            ->maxLength(191)
-                            ->placeholder('Shop Now')
-                            ->label('Button Text'),
-
-                        Forms\Components\TextInput::make('link')
+                        Forms\Components\TextInput::make('banner_link')
                             ->url()
                             ->maxLength(191)
                             ->placeholder('https://example.com/promo')
-                            ->label('Button Link'),
+                            ->label('Banner Link'),
                     ])
                     ->columns(2),
 
@@ -97,15 +87,11 @@ class PromoPopupResource extends Resource
                     ->sortable()
                     ->weight('bold'),
 
-                Tables\Columns\TextColumn::make('description')
-                    ->limit(40)
-                    ->searchable()
-                    ->toggleable(),
-
-                Tables\Columns\TextColumn::make('button_text')
+                Tables\Columns\TextColumn::make('banner_link')
+                    ->limit(30)
                     ->searchable()
                     ->toggleable()
-                    ->label('Button'),
+                    ->label('Banner Link'),
 
                 Tables\Columns\TextColumn::make('start_date')
                     ->dateTime('d/m/Y H:i')

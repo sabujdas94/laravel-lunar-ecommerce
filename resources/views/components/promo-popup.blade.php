@@ -7,25 +7,23 @@
     <div class="promo-popup-content">
         <button class="promo-popup-close" onclick="closePromoPopup()">&times;</button>
         
-        @if($popup->image)
-        <div class="promo-popup-image">
-            <img src="{{ asset('storage/' . $popup->image) }}" alt="{{ $popup->title }}">
-        </div>
+        @if($popup->banner_link)
+        <a href="{{ $popup->banner_link }}" class="promo-popup-link" target="_blank" rel="noopener noreferrer">
         @endif
         
-        <div class="promo-popup-body">
-            <h2 class="promo-popup-title">{{ $popup->title }}</h2>
-            
-            @if($popup->description)
-            <p class="promo-popup-description">{{ $popup->description }}</p>
+            @if($popup->image)
+            <div class="promo-popup-image">
+                <img src="{{ asset('storage/' . $popup->image) }}" alt="{{ $popup->title }}">
+            </div>
             @endif
             
-            @if($popup->link && $popup->button_text)
-            <a href="{{ $popup->link }}" class="promo-popup-button">
-                {{ $popup->button_text }}
-            </a>
-            @endif
-        </div>
+            <div class="promo-popup-body">
+                <h2 class="promo-popup-title">{{ $popup->title }}</h2>
+            </div>
+        
+        @if($popup->banner_link)
+        </a>
+        @endif
     </div>
 </div>
 
@@ -111,30 +109,19 @@
 
 .promo-popup-title {
     font-size: 28px;
-    margin: 0 0 15px 0;
+    margin: 0;
     color: #333;
 }
 
-.promo-popup-description {
-    font-size: 16px;
-    color: #666;
-    line-height: 1.6;
-    margin: 0 0 25px 0;
-}
-
-.promo-popup-button {
-    display: inline-block;
-    background: #007bff;
-    color: white;
-    padding: 12px 30px;
-    border-radius: 6px;
+.promo-popup-link {
+    display: block;
     text-decoration: none;
-    font-weight: 600;
-    transition: background 0.3s ease;
+    color: inherit;
+    transition: transform 0.3s ease;
 }
 
-.promo-popup-button:hover {
-    background: #0056b3;
+.promo-popup-link:hover {
+    transform: scale(1.02);
 }
 </style>
 
