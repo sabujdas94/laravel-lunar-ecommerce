@@ -30,6 +30,9 @@ class AppServiceProvider extends ServiceProvider
                 ])
                 ->resources([
                     \App\Filament\Resources\PageResource::class,
+                    \App\Filament\Resources\SliderResource::class,
+                    \App\Filament\Resources\PartnerResource::class,
+                    \App\Filament\Resources\PromoPopupResource::class,
                 ]);
         })->register();
                 

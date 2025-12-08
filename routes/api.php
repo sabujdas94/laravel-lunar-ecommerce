@@ -27,6 +27,13 @@ Route::get('/home-page-collection', [HomePageController::class, 'collection']);
 Route::get('/products', [\App\Http\Controllers\ShopPageController::class, 'getProducts']);
 Route::get('/product/{slug}', [\App\Http\Controllers\Api\ProductController::class, 'showByUrl']);
 
+// CMS API routes (public)
+Route::prefix('cms')->group(function () {
+    Route::get('/sliders', [\App\Http\Controllers\Api\CmsController::class, 'sliders']);
+    Route::get('/partners', [\App\Http\Controllers\Api\CmsController::class, 'partners']);
+    Route::get('/promo-popup', [\App\Http\Controllers\Api\CmsController::class, 'promoPopup']);
+});
+
 // Cart API routes
 Route::prefix('cart')->group(function () {
     Route::post('/', [\App\Http\Controllers\Api\CartController::class, 'store']); // Create cart

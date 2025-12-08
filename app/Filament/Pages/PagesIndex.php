@@ -10,7 +10,7 @@ class PagesIndex extends Page
 
     protected static ?string $navigationLabel = 'Pages';
 
-    protected static ?string $navigationGroup = 'Pages';
+    protected static ?string $navigationGroup = 'CMS';
 
     public function mount(): void
     {
