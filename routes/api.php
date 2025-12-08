@@ -32,6 +32,7 @@ Route::prefix('cms')->group(function () {
     Route::get('/sliders', [\App\Http\Controllers\Api\CmsController::class, 'sliders']);
     Route::get('/partners', [\App\Http\Controllers\Api\CmsController::class, 'partners']);
     Route::get('/promo-popup', [\App\Http\Controllers\Api\CmsController::class, 'promoPopup']);
+    Route::get('/home-page-data', [\App\Http\Controllers\Api\CmsController::class, 'homePageData']);
 });
 
 // Cart API routes
