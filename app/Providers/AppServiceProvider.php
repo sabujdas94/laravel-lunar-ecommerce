@@ -6,6 +6,7 @@ use App\Lunar\CreatePageExtension;
 use App\Lunar\EditPageExtension;
 use App\Lunar\PageListExtension;
 use App\Lunar\PageViewExtension;
+use App\Models\Partner;
 use Illuminate\Support\ServiceProvider;
 use Lunar\Admin\Support\Facades\LunarPanel;
 use Lunar\Facades\Payments;
@@ -67,5 +68,6 @@ class AppServiceProvider extends ServiceProvider
 
         // Register Order observer for COD payment status updates
         Order::observe(OrderObserver::class);
+        Partner::observe(\App\Observers\HomePageDataObserver::class);
     }
 }

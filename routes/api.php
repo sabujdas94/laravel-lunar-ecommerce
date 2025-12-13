@@ -26,6 +26,7 @@ Route::get('/user', function (Request $request) {
 Route::get('/home-page-collection', [HomePageController::class, 'collection']);
 Route::get('/products', [\App\Http\Controllers\ShopPageController::class, 'getProducts']);
 Route::get('/product/{slug}', [\App\Http\Controllers\Api\ProductController::class, 'showByUrl']);
+Route::get('/products-by-tag', [\App\Http\Controllers\Api\ProductController::class, 'getByTag']);
 
 // CMS API routes (public)
 Route::prefix('cms')->group(function () {

@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Lunar\Models\Product;
 use Lunar\Models\Language;
+use App\Services\ProductService;
+use App\Http\Requests\GetProductsByTagRequest;
 
 class ProductController extends Controller
 {
@@ -127,5 +129,26 @@ class ProductController extends Controller
             'thumbnail' => $product->getThumbnailImage(),
             'images' => $images,
         ]);
+    }
+
+    /**
+     * Return products by tag.
+     *
+     * Example: GET /api/products-by-tag?tag=sale,new&lang_id=1
+     */
+    public function getByTag(GetProductsByTagRequest $request)
+    {
+        $validated = $request->validated();
+        $tags = $validated['tag'];
+        $langId = $validated['lang_id'] ?? 1;
+        $limit = $request->input('limit', 8);
+
+        $productService = new ProductService();
+        $formattedProducts = $productService->getProductsByTags($tags, $langId, $limit);
+        if ($formattedProducts->isEmpty()) {
+            return response()->json(['message' => 'No products found for the specified tags.'], 404);
+        }
+
+        return response()->json($formattedProducts);
     }
 }

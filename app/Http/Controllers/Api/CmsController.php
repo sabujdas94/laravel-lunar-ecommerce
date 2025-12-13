@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Slider;
 use App\Models\Partner;
 use App\Models\PromoPopup;
+use App\Services\DataVersion;
+use App\Services\ProductService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -103,8 +105,15 @@ class CmsController extends Controller
      * @param Request $request
      * @return JsonResponse
      */
-    public function homePageData(Request $request): JsonResponse
+    public function homePageData(Request $request): JsonResponse|\Illuminate\Http\Response
     {
+        $version = DataVersion::get('products');
+
+        // Conditional request
+        if ($request->header('If-None-Match') === $version) {
+            return response()->noContent(304);
+        }
+        
         $languageCode = $request->query('lang', 'en');
 
         $sliders = Slider::active()
@@ -184,6 +193,20 @@ class CmsController extends Controller
             }
         }
 
+        $productService = new ProductService();
+        $treanding = $productService->getProductsByTags(
+            ['TRENDING'],
+             $language?->id ?? 1,
+        );
+        $new_arrivals = $productService->getProductsByTags(
+            ['NEW ARRIVALS'],
+             $language?->id ?? 1,
+        );
+        $on_sale= $productService->getProductsByTags(
+            ['ON SALE'],
+             $language?->id ?? 1,
+        );
+
         return response()->json([
             'success' => true,
             'data' => [
@@ -191,7 +214,14 @@ class CmsController extends Controller
                 'partners' => $partners,
                 'popup' => $popupData,
                 'shop_by_category' => $collectionResponse,
+                'products' => [
+                    'trending' => $treanding,
+                    'new_arrivals' => $new_arrivals,
+                    'on_sale' => $on_sale,
+
+                ],
             ],
-        ]);
+        ])
+        ->header('ETag', $version);
     }
 }
