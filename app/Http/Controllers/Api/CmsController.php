@@ -107,7 +107,7 @@ class CmsController extends Controller
      */
     public function homePageData(Request $request): JsonResponse|\Illuminate\Http\Response
     {
-        $version = DataVersion::get('products');
+        $version = DataVersion::get('home_page');
 
         // Conditional request
         if ($request->header('If-None-Match') === $version) {
