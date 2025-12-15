@@ -38,8 +38,12 @@ class ProductService
             // price — take the first price model if present
             $priceModel = $product->prices?->first();
             $price = null;
+            $comparePrice = null;
             if ($priceModel) {
                 $price = $priceModel->price->formatted($language->lang_code, $priceModel->price->currency->code);
+
+                $comparePrice = $priceModel->compare_price ?
+                    $priceModel->compare_price->formatted($language->lang_code, $priceModel->price->currency->code) : null;
             }
 
             // collections
@@ -64,6 +68,7 @@ class ProductService
                 'name' => $name,
                 // 'description' => $description,
                 'price' => $price,
+                'comparePrice' => $comparePrice,
                 'collections' => $collections,
                 'tags' => $tags,
                 'thumbnail' => $product->getThumbnailImage(),

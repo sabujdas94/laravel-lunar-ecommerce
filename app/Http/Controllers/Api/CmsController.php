@@ -162,9 +162,10 @@ class CmsController extends Controller
         // Add collections
         $language = \Lunar\Models\Language::where('code', $languageCode)->first();
         $scCollectionGroup = \Lunar\Models\CollectionGroup::query()
-            ->with('collections')
-            ->with('collections.media')
-            ->with('collections.children')
+            ->with(['collections' => function($q){
+                return $q->with(['media', 'children'])
+                    ->whereNull('parent_id');
+            }])
             ->where('handle', 'shop-by-category')
             ->first();
 
