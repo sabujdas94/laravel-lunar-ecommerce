@@ -28,6 +28,7 @@ class AppServiceProvider extends ServiceProvider
                 ->plugin(new ShippingPlugin())
                 ->pages([
                     \App\Filament\Pages\PagesIndex::class,
+                    \App\Filament\Pages\CacheIndex::class,
                 ])
                 ->resources([
                     \App\Filament\Resources\PageResource::class,
